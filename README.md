@@ -31,6 +31,7 @@ We strongly recommend using [UV](https://docs.astral.sh/uv/) to setup the projec
 git clone <repository-url>
 cd trae-agent
 uv sync
+uv tool install -e .
 ```
 
 ### Setup API Keys
@@ -178,7 +179,7 @@ trae-cli run "Debug the authentication module"
 # Saves to: trajectory_20250612_220546.json
 
 # Custom trajectory file
-trae-cli-cliae run "Optimize the database queries" --trajectory-file optimization_debug.json
+trae-cli run "Optimize the database queries" --trajectory-file optimization_debug.json
 ```
 
 Trajectory files contain:
