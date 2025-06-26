@@ -31,6 +31,7 @@ class ToolResult:
     result: str | None = None
     error: str | None = None
     id: str | None = None # OpenAI-specific field
+    name: str | None = None # Gemini-specific field
 
 
 ToolCallArguments = dict[str, str | int | float | dict[str, object] | list[object] | None]

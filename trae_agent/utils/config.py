@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 # TODO: remove these annotations by defining fine-grained types
-# pyright: reportAny=false
-# pyright: reportUnannotatedClassAttribute=false
 # pyright: reportUnknownMemberType=false
 # pyright: reportUnknownArgumentType=false
 # pyright: reportUnknownVariableType=false

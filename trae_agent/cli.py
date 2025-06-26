@@ -42,10 +42,20 @@ def load_config(provider: str | None = None, model: str | None = None, api_key: 
     if resolved_model is not None:
         model_parameters.model = str(resolved_model)
 
+    env_var_key = ""
+    if resolved_provider == "openai":
+        env_var_key = "OPENAI_API_KEY"
+    elif resolved_provider == "anthropic":
+        env_var_key = "ANTHROPIC_API_KEY"
+    elif resolved_provider == "azure":
+        env_var_key = "AZURE_API_KEY"
+    elif resolved_provider == "gemini":
+        env_var_key = "GEMINI_API_KEY"
+
     resolved_api_key = resolve_config_value(
         api_key,
         config.model_providers[str(resolved_provider)].api_key,
-        "OPENAI_API_KEY" if resolved_provider == "openai" else "ANTHROPIC_API_KEY"
+        env_var_key
     )
     if resolved_api_key is not None:
         model_parameters.api_key = str(resolved_api_key)
@@ -111,7 +121,6 @@ def run(task: str, provider: str | None = None, model: str | None = None, api_ke
 
     # Create agent
     agent: TraeAgent = create_agent(config)
-
     # Set up trajectory recording
     trajectory_path = None
     if trajectory_file:
