@@ -27,7 +27,7 @@ class GeminiClient(BaseLLMClient):
             raise ValueError("GEMINI API key not provided. Set GEMINI_API_KEY in environment variables or config file.")
 
         self.client : genai.Client = genai.Client(api_key=self.api_key)
-        self.message_history : list[types.Content] = None
+        self.message_history : list[types.Content] = []
         self.system_message: str | None = None
 
     @override
@@ -52,7 +52,7 @@ class GeminiClient(BaseLLMClient):
                     types.FunctionDeclaration(
                         name=tool.name,
                         description=tool.description,
-                        parameters=tool.parameters
+                        parameters=tool.get_input_schema()
                     )
                 )
         config: types.GenerateContentConfig = types.GenerateContentConfig(
@@ -60,7 +60,7 @@ class GeminiClient(BaseLLMClient):
             temperature=model_parameters.temperature,
             top_p=model_parameters.top_p,
             top_k=model_parameters.top_k,
-            max_output_tokens=model_parameters.max_output_tokens,
+            max_output_tokens=model_parameters.max_tokens,
             tools = [types.Tool(function_declarations=function_declarations)]
         )
         response = None
@@ -86,11 +86,13 @@ class GeminiClient(BaseLLMClient):
         content = ""
         tool_calls: list[ToolCall] = []
         
+        # Collect tool calls from the response
         for fn in response.function_calls:
             if fn.name:
                 tool_calls.append(
                     ToolCall(
                         id=fn.id,
+                        call_id=fn.id,
                         name=fn.name,
                         arguments=fn.args
                     )
@@ -103,23 +105,25 @@ class GeminiClient(BaseLLMClient):
                 )
             else:
                 raise ValueError("Function call name is required")
-        
-        if response.text:
-            content += response.text
-            self.message_history.append(
-                types.Content(
-                    role="model",
-                    parts=[types.Part(text=content)]
+
+        # Collect text content from the response
+        for part in response.candidates[0].content.parts:
+            if part.text:
+                content += part.text
+                self.message_history.append(
+                    types.Content(
+                        role="model",
+                        parts=[types.Part(text=part.text)]
+                    )
                 )
-            )
             
         usage = None
         if response.usage_metadata:
             usage = LLMUsage(
                 cache_read_input_tokens=response.usage_metadata.cached_content_token_count,
-                prompt_tokens=response.usage_metadata.prompt_token_count,
-                completion_tokens=response.usage_metadata.candidates_token_count,
-                total_tokens=response.usage_metadata.total_token_count
+                input_tokens=response.usage_metadata.prompt_token_count,
+                output_tokens=response.usage_metadata.candidates_token_count,
+                reasoning_tokens=response.usage_metadata.thoughts_token_count,
             )
 
         llm_response = LLMResponse(

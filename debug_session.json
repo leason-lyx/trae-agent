@@ -1,7 +1,7 @@
 {
   "task": "Create a hello world Python script",
-  "start_time": "2025-06-27T15:37:35.072216",
-  "end_time": "2025-06-27T15:37:42.803065",
+  "start_time": "2025-06-27T23:44:14.178256",
+  "end_time": "2025-06-27T23:44:23.013526",
   "provider": "gemini",
   "model": "gemini-2.5-flash",
   "max_steps": 20,
@@ -9,7 +9,7 @@
   "agent_steps": [
     {
       "step_number": 1,
-      "timestamp": "2025-06-27T15:37:36.788459",
+      "timestamp": "2025-06-27T23:44:16.993855",
       "state": "error",
       "llm_messages": [
         {
@@ -25,10 +25,10 @@
       "tool_calls": null,
       "tool_results": null,
       "reflection": null,
-      "error": "LLMUsage.__init__() got an unexpected keyword argument 'prompt_tokens'"
+      "error": "'Candidate' object has no attribute 'parts'"
     }
   ],
   "success": false,
   "final_result": null,
-  "execution_time": 7.730849
+  "execution_time": 8.83527
 }
