@@ -160,11 +160,11 @@ Follow these steps methodically:
 
 **Guiding Principle:** Act like a senior software engineer. Prioritize correctness, safety, and high-quality, test-driven development.
 
-# GUIDE FOR HOW TO USE "sequential_thinking" TOOL:
+# GUIDE FOR HOW TO USE "sequentialthinking" TOOL:
 - Your thinking should be thorough and so it's fine if it's very long. Set totalThoughts to at least 5, but setting it up to 25 is fine as well. You'll need more total thoughts when you are considering multiple possible solutions or root causes for an issue.
 - Use this tool as much as you find necessary to improve the quality of your answers.
 - You can run bash commands (like tests, a reproduction script, or 'grep'/'find' to find relevant context) in between thoughts.
-- The sequential_thinking tool can help you break down complex problems, analyze issues step-by-step, and ensure a thorough approach to problem-solving.
+- The sequentialthinking tool can help you break down complex problems, analyze issues step-by-step, and ensure a thorough approach to problem-solving.
 - Don't hesitate to use it multiple times throughout your thought process to enhance the depth and accuracy of your solutions.
 
 If you are sure the issue has been solved, you should call the `task_done` to finish the task."""

@@ -37,8 +37,11 @@ class GeminiClient(BaseLLMClient):
 
     @override
     def chat(self, messages: list[LLMMessage], model_parameters: ModelParameters, tools: list[Tool] | None = None, reuse_history: bool = True) -> LLMResponse:
-        """Send chat messages to gemini with optional tool support."""
+        """Beginning chat messages to gemini with optional tool support."""
+        # print("-"*10)
+        # print("Sending messages to Gemini API...")
         gemini_messages: list[types.Content] = self.parse_messages(messages)
+        # print(f"Parsed input messages: {gemini_messages}")
         if reuse_history:
             self.message_history = self.message_history + gemini_messages
         else:
@@ -67,6 +70,7 @@ class GeminiClient(BaseLLMClient):
         error_message = ""
         for i in range(model_parameters.max_retries):
             try:
+                # print("full input contents:", self.message_history)
                 response = self.client.models.generate_content(
                     model=model_parameters.model,
                     contents=self.message_history,
@@ -75,6 +79,7 @@ class GeminiClient(BaseLLMClient):
                 break
             except Exception as e:
                 error_message += f"Error {i + 1}: {str(e)}\n"
+                # print(f"Error in Gemini API call: {error_message}")
                 # Randomly sleep for 3-30 seconds
                 time.sleep(random.randint(3, 30))
                 continue
@@ -100,11 +105,12 @@ class GeminiClient(BaseLLMClient):
                 self.message_history.append(
                     types.Content(
                         role="model",
-                        parts=[fn]
+                        parts=[types.Part(function_call=fn)]
                     )
                 )
             else:
                 raise ValueError("Function call name is required")
+        # print(f"Gemini output tool calls: {tool_calls}")
 
         # Collect text content from the response
         for part in response.candidates[0].content.parts:
@@ -116,13 +122,16 @@ class GeminiClient(BaseLLMClient):
                         parts=[types.Part(text=part.text)]
                     )
                 )
-            
+        
+        # print(f"Gemini output response text content: {content}")
+        
         usage = None
         if response.usage_metadata:
             usage = LLMUsage(
-                cache_read_input_tokens=response.usage_metadata.cached_content_token_count,
                 input_tokens=response.usage_metadata.prompt_token_count,
                 output_tokens=response.usage_metadata.candidates_token_count,
+                cache_creation_input_tokens = 0,
+                cache_read_input_tokens=response.usage_metadata.cached_content_token_count if response.usage_metadata.cached_content_token_count else 0,
                 reasoning_tokens=response.usage_metadata.thoughts_token_count,
             )
 
@@ -142,7 +151,8 @@ class GeminiClient(BaseLLMClient):
                 model=model_parameters.model,
                 tools=tools
             )
-            
+        
+        # print(f"final response: {llm_response}")
         return llm_response
 
     @override
@@ -159,6 +169,7 @@ class GeminiClient(BaseLLMClient):
 
     def parse_messages(self, messages: list[LLMMessage]) -> list[types.Content]:
         """Parse the messages to gemini format."""
+        # print(f"Parsing messages: {messages}")
         gemini_messages: list[types.Content] = []
         for msg in messages:
             if msg.tool_result:
@@ -196,24 +207,24 @@ class GeminiClient(BaseLLMClient):
                     )
                 else:
                     raise ValueError(f"Invalid message role: {msg.role}")
+        # print("gemini_messages: ",gemini_messages)
         return gemini_messages
 
-    def parse_tool_call(self, tool_call: ToolCall) -> types.FunctionCall:
+    def parse_tool_call(self, tool_call: ToolCall) -> types.Part:
         """Parse the tool call from the LLM response."""
-        return types.FunctionCall(
-            id=tool_call.id,
-            args=json.dumps(tool_call.arguments),
-            name=tool_call.name)
+        return types.Part.from_function_call(
+            name=tool_call.name,
+            args=tool_call.arguments,
+        )
 
-    def parse_tool_call_result(self, tool_call_result: ToolResult) -> types.FunctionResponse:
+    def parse_tool_call_result(self, tool_call_result: ToolResult) -> types.Part:
         """Parse the tool call result from the LLM response."""
         response : dict = {}
+        if not tool_call_result.name:
+            tool_call_result.name = "name"  # Default name if not provided
+            # raise ValueError("ToolResult.name 不能为空")
         if tool_call_result.result:
             response["result"] = tool_call_result.result # SDK源代码建议这里是output字段，但是文档是result字段
         if tool_call_result.error:
             response["error"] = tool_call_result.error
-        return types.FunctionResponse(
-            id=tool_call_result.id,
-            name=tool_call_result.name,
-            response=response,
-            )
+        return types.Part.from_function_response(name = tool_call_result.name, response=response)
