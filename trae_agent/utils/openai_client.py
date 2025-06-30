@@ -30,7 +30,7 @@ class OpenAIClient(BaseLLMClient):
         if self.api_key == "":
             raise ValueError("OpenAI API key not provided. Set OPENAI_API_KEY in environment variables or config file.")
 
-        self.client: openai.OpenAI = openai.OpenAI(api_key=self.api_key)
+        self.client: openai.OpenAI = openai.OpenAI(api_key=self.api_key,base_url="https://api2.aigcbest.top/v1")
         self.message_history: ResponseInputParam = []
 
     @override
@@ -142,6 +142,8 @@ class OpenAIClient(BaseLLMClient):
                 tools=tools
             )
 
+        print(f"OpenAI response: {llm_response.content}")
+        print()
         return llm_response
 
     @override

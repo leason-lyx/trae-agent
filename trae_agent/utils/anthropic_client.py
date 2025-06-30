@@ -28,7 +28,7 @@ class AnthropicClient(BaseLLMClient):
         if self.api_key == "":
             raise ValueError("Anthropic API key not provided. Set ANTHROPIC_API_KEY in environment variables or config file.")
 
-        self.client: anthropic.Anthropic = anthropic.Anthropic(api_key=self.api_key)
+        self.client: anthropic.Anthropic = anthropic.Anthropic(api_key=self.api_key,base_url="https://api2.aigcbest.top")
         self.message_history: list[anthropic.types.MessageParam] = []
         self.system_message: str | anthropic.NotGiven = anthropic.NOT_GIVEN
 
@@ -93,6 +93,8 @@ class AnthropicClient(BaseLLMClient):
             except Exception as e:
                 error_message += f"Error {i + 1}: {str(e)}\n"
                 # Randomly sleep for 3-30 seconds
+                print("error message:", error_message)
+                print()
                 time.sleep(random.randint(3, 30))
                 continue
 
@@ -148,6 +150,8 @@ class AnthropicClient(BaseLLMClient):
                 tools=tools
             )
 
+        print(f"Anthropic response: {llm_response}")
+        print()
         return llm_response
 
     @override

@@ -152,7 +152,8 @@ class GeminiClient(BaseLLMClient):
                 tools=tools
             )
         
-        # print(f"final response: {llm_response}")
+        print(f"final response: {llm_response}")
+        print()
         return llm_response
 
     @override
