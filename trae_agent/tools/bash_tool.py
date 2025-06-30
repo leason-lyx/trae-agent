@@ -32,7 +32,7 @@ class _BashSession:
         self._timed_out = False
         self._process: asyncio.subprocess.Process | None = None
 
-    async def start(self):
+    async def start(self, working_directory: str) -> None:
         if self._started:
             return
 
@@ -49,6 +49,7 @@ class _BashSession:
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                     start_new_session=True,
+                    cwd=working_directory,  # 设置工作目录
                 ),
                 timeout=self._timeout
             )
@@ -167,6 +168,9 @@ class BashTool(Tool):
 * To inspect a particular line range of a file, e.g. lines 10-25, try 'sed -n 10,25p /path/to/the/file'.
 * Please avoid commands that may produce a very large amount of output.
 * Please run long lived commands in the background, e.g. 'sleep 10 &' or start a server in the background.
+* When running any command, all references to files or directories must use absolute paths. The current working directory is not guaranteed.
+* Do not run any command that affect files outside the project_path directory.
+* Do not use this tool to create, edit, view, and manipulate files.
 """
 
     @override
@@ -183,17 +187,29 @@ class BashTool(Tool):
                 type="boolean",
                 description="Set to true to restart the bash session.",
                 required=False
+            ),
+            ToolParameter(
+                name="working_directory",
+                type="string",
+                description="Absolute path to working_directory, e.g. `/repo`.",
+                required=True
             )
         ]
 
     @override
     async def execute(self, arguments: ToolCallArguments) -> ToolExecResult:
+        if arguments.get("working_directory") is None:
+            return ToolExecResult(
+                error="working_directory is required for the bash tool",
+                error_code=-1
+            )
+        working_directory = str(arguments["working_directory"])
         if arguments.get("restart"):
             if self._session:
                 self._session.stop()
             self._session = _BashSession()
             print("Restarting bash session...")
-            await self._session.start()
+            await self._session.start(working_directory)
             print("Bash session restarted successfully.")
 
             return ToolExecResult(output="tool has been restarted.")
@@ -202,7 +218,7 @@ class BashTool(Tool):
             try:
                 self._session = _BashSession()
                 print("Starting bash session...")
-                await self._session.start()
+                await self._session.start(working_directory)
                 print("Bash session started successfully.")
             except Exception as e:
                 return ToolExecResult(
