@@ -78,8 +78,9 @@ Parameters explained:
 - thought_number: Current number in sequence (can go beyond initial total if needed)
 - total_thoughts: Current estimate of thoughts needed (can be adjusted up/down)
 - is_revision: A boolean indicating if this thought revises previous thinking
-- revises_thought: If is_revision is true, which thought number is being reconsidered
+- revises_thought: If is_revision is true, which thought number is being reconsidered revises_thought must be a positive integer
 - branch_from_thought: If branching, which thought number is the branching point
+branch_from_thought must be a positive integer
 - branch_id: Identifier for the current branch (if any)
 - needs_more_thoughts: If reaching end but realizing more thoughts needed
 
