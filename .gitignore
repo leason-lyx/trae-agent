@@ -176,3 +176,6 @@ trae-config-local.json
 debug_session.json
 # Agent configuration
 trae_config.json
+
+# temporary files
+test_bash_tool.py

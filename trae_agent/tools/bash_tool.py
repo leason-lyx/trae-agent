@@ -36,17 +36,40 @@ class _BashSession:
         if self._started:
             return
 
-        self._process = await asyncio.create_subprocess_shell(
-            self.command,
-            preexec_fn=os.setsid,
-            shell=True,
-            bufsize=0,
-            stdin=asyncio.subprocess.PIPE,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
+        print("creating bash subprocess...")
+        print(f"command: {self.command}")
+        try:
+            # 用 asyncio.wait_for 给 create_subprocess_shell 套超时
+            self._process = await asyncio.wait_for(
+                asyncio.create_subprocess_shell(
+                    self.command,
+                    shell=True,
+                    bufsize=0,
+                    stdin=asyncio.subprocess.PIPE,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    start_new_session=True,
+                ),
+                timeout=self._timeout
+            )
+            print("bash subprocess created successfully.")
+            self._started = True
 
-        self._started = True
+        except asyncio.TimeoutError:
+            # 超时：bash 启动超过 10 秒
+            print("Failed to start bash subprocess: timeout exceeded.")
+            raise ToolError("Failed to start bash subprocess: timeout exceeded.")
+
+        except FileNotFoundError:
+            # bash 可执行文件找不到
+            print(f"{self.command} not found; please install bash or adjust PATH.")
+            raise ToolError(f"{self.command} not found; please install bash or adjust PATH.")
+
+        except Exception as e:
+            # 其他异常，打印完整 repr 便于排查
+            print(f"Failed to start bash subprocess: {e!r}")
+            raise ToolError(f"Failed to start bash subprocess: {e}") from None
+        
 
     def stop(self):
         """Terminate the bash shell."""
@@ -77,6 +100,7 @@ class _BashSession:
         assert self._process.stdout
         assert self._process.stderr
 
+        print(f"Running command in bash: {command}")
         # send command to the process
         self._process.stdin.write(
             command.encode() + f"; echo '{self._sentinel}'\n".encode()
@@ -114,6 +138,7 @@ class _BashSession:
         self._process.stdout._buffer.clear()  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
         self._process.stderr._buffer.clear()  # pyright: ignore[reportAttributeAccessIssue, reportUnknownMemberType]
 
+        print(f"Command output: {output}")
         return ToolExecResult(output=output, error=error, error_code=error_code) # pyright: ignore[reportUnknownArgumentType]
 
 
@@ -167,14 +192,18 @@ class BashTool(Tool):
             if self._session:
                 self._session.stop()
             self._session = _BashSession()
+            print("Restarting bash session...")
             await self._session.start()
+            print("Bash session restarted successfully.")
 
             return ToolExecResult(output="tool has been restarted.")
 
         if self._session is None:
             try:
                 self._session = _BashSession()
+                print("Starting bash session...")
                 await self._session.start()
+                print("Bash session started successfully.")
             except Exception as e:
                 return ToolExecResult(
                     error=f"Error starting bash session: {e}",
