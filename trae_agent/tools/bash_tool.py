@@ -168,7 +168,7 @@ class BashTool(Tool):
 * To inspect a particular line range of a file, e.g. lines 10-25, try 'sed -n 10,25p /path/to/the/file'.
 * Please avoid commands that may produce a very large amount of output.
 * Please run long lived commands in the background, e.g. 'sleep 10 &' or start a server in the background.
-* When running any command, all references to files or directories must use absolute paths. The current working directory is not guaranteed.
+* When running any command, all references to files or directories must use absolute paths.
 * Do not run any command that affect files outside the project_path directory.
 * Do not use this tool to create, edit, view, and manipulate files.
 """
