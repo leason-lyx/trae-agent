@@ -92,24 +92,25 @@ class GeminiClient(BaseLLMClient):
         tool_calls: list[ToolCall] = []
         
         # Collect tool calls from the response
-        for fn in response.function_calls:
-            if fn.name:
-                tool_calls.append(
-                    ToolCall(
-                        id=fn.id,
-                        call_id=fn.id,
-                        name=fn.name,
-                        arguments=fn.args
+        if response.function_calls is not None and len(response.function_calls) > 0:
+            for fn in response.function_calls:
+                if fn.name:
+                    tool_calls.append(
+                        ToolCall(
+                            id=fn.id,
+                            call_id=fn.id,
+                            name=fn.name,
+                            arguments=fn.args
+                        )
                     )
-                )
-                self.message_history.append(
-                    types.Content(
-                        role="model",
-                        parts=[types.Part(function_call=fn)]
+                    self.message_history.append(
+                        types.Content(
+                            role="model",
+                            parts=[types.Part(function_call=fn)]
+                        )
                     )
-                )
-            else:
-                raise ValueError("Function call name is required")
+                else:
+                    raise ValueError("Function call name is required")
         # print(f"Gemini output tool calls: {tool_calls}")
 
         # Collect text content from the response
@@ -152,8 +153,8 @@ class GeminiClient(BaseLLMClient):
                 tools=tools
             )
         
-        print(f"final response: {llm_response}")
-        print()
+        # print(f"final response: {llm_response}")
+        # print()
         return llm_response
 
     @override
