@@ -114,15 +114,16 @@ class GeminiClient(BaseLLMClient):
         # print(f"Gemini output tool calls: {tool_calls}")
 
         # Collect text content from the response
-        for part in response.candidates[0].content.parts:
-            if part.text:
-                content += part.text
-                self.message_history.append(
-                    types.Content(
-                        role="model",
-                        parts=[types.Part(text=part.text)]
+        if response.candidates and len(response.candidates) > 0 and response.candidates[0].content:
+            for part in response.candidates[0].content.parts:
+                if part.text:
+                    content += part.text
+                    self.message_history.append(
+                        types.Content(
+                            role="model",
+                            parts=[types.Part(text=part.text)]
+                        )
                     )
-                )
         
         # print(f"Gemini output response text content: {content}")
         
