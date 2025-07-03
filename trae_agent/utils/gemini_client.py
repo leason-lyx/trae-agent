@@ -129,12 +129,16 @@ class GeminiClient(BaseLLMClient):
         
         usage = None
         if response.usage_metadata:
+            input_tokens = response.usage_metadata.prompt_token_count or 0
+            output_tokens = response.usage_metadata.candidates_token_count or 0
+            cache_read_tokens = response.usage_metadata.cached_content_token_count or 0
+            reasoning_tokens = response.usage_metadata.thoughts_token_count or 0
             usage = LLMUsage(
-                input_tokens=response.usage_metadata.prompt_token_count,
-                output_tokens=response.usage_metadata.candidates_token_count,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
                 cache_creation_input_tokens = 0,
-                cache_read_input_tokens=response.usage_metadata.cached_content_token_count if response.usage_metadata.cached_content_token_count else 0,
-                reasoning_tokens=response.usage_metadata.thoughts_token_count,
+                cache_read_input_tokens=cache_read_tokens,
+                reasoning_tokens=reasoning_tokens,
             )
 
         llm_response = LLMResponse(
